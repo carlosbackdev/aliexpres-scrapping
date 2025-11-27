@@ -3,11 +3,12 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs').promises; 
 const { scrapeAliExpressProduct } = require('./scraper/aliexpress.scraper');
 const { updateProductsPrices } = require('./scraper/aliexpress.price-updater');
 const { scrapeRequestSchema, productResponseSchema } = require('./schemas/product.schema');
 const { priceUpdateRequestSchema } = require('./schemas/price-update.schema');
-const { enhanceRequestSchema, enhanceResponseSchema } = require('./schemas/enhance.schema');
+const { enhanceRequestSchema } = require('./schemas/enhance.schema');
 const { downloadAllImages } = require('./scraper/functions/image.downloader');
 const { enhanceProductWithAI } = require('./service-ai/openai.service');
 const { matchVariantImages } = require('./scraper/functions/variant-image-matcher');
@@ -34,7 +35,6 @@ app.use(cors());
 // Servir imágenes estáticas desde el volumen
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/images', express.static(path.join(__dirname, '../images')));
-
 
 app.get('/', (req, res) => {
   res.json({
@@ -115,7 +115,7 @@ app.post('/scrape', async (req, res) => {
   }
 });
 
-// Nuevo endpoint: Actualización masiva de precios
+// ========== ENDPOINT: Actualización masiva de precios ==========
 app.post('/update-prices', async (req, res) => {
   try {
     console.log(`📦 Productos a actualizar: ${req.body.products?.length || 0}`);
@@ -160,7 +160,7 @@ app.post('/update-prices', async (req, res) => {
   }
 });
 
-// Nuevo endpoint: Mejorar título y generar keywords con IA
+// ========== ENDPOINT: Mejorar título y generar keywords con IA ==========
 app.post('/enhance-title', async (req, res) => {
   try {
     console.log('📥 Recibiendo petición de mejora de título con IA...');
@@ -206,6 +206,48 @@ app.post('/enhance-title', async (req, res) => {
   }
 });
 
+// ========== ENDPOINT: ELIMINAR IMÁGENES DE PRODUCTOS ==========
+app.post('/api/products-images/delete', async (req, res) => {
+  try {
+    const products = req.body;
+
+    if (!Array.isArray(products)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Body debe ser un array de productos'
+      });
+    }
+
+    const deleted = [];
+    const failed = [];
+
+    for (const prod of products) {
+      if (typeof prod.imageUrl === 'string' && prod.imageUrl.startsWith('/uploads/products/')) {
+        const imagePath = path.join(__dirname, '..', prod.imageUrl);
+
+        try {
+          await fs.unlink(imagePath);
+          deleted.push(prod.id);
+        } catch (err) {
+          console.error(`No se pudo eliminar ${imagePath}:`, err.message);
+          failed.push(prod.id);
+        }
+      } else {
+        failed.push(prod.id);
+      }
+    }
+
+    res.json({ success: true, deleted, failed });
+  } catch (error) {
+    console.error('❌ Error en /api/products-images/delete:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al eliminar imágenes',
+      message: error.message
+    });
+  }
+});
+
 // ========== ENDPOINT: CREAR BANNER ==========
 app.post('/banner/create', upload.single('image'), async (req, res) => {
   try {
@@ -220,7 +262,7 @@ app.post('/banner/create', upload.single('image'), async (req, res) => {
       });
     }
     
-    console.log(`📷 Imagen recibida: ${req.file.originalname} (${req.file.size} bytes)`);
+    console.log(`📷 Imagen recibida: ${req.file.originalname} (${req.file.size} bytes)`); 
     
     // Validar campos
     const bannerData = createBannerSchema.parse({

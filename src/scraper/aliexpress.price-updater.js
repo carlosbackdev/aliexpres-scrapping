@@ -84,7 +84,9 @@ async function scrapePriceUpdate(url) {
         : 0,
       deliveryEstimateDays: shippingInfo.estimatedDelivery.min && shippingInfo.estimatedDelivery.max
         ? { min: shippingInfo.estimatedDelivery.min, max: shippingInfo.estimatedDelivery.max }
-        : { min: 15, max: 30 }
+        : { min: 15, max: 30 },
+      estimatedDeliveryMin: shippingInfo.estimatedDelivery?.min || 15,
+      estimatedDeliveryMax: shippingInfo.estimatedDelivery?.max || 30
     };
     
     console.log(`✅ Precios actualizados - Base: ${result.basePrice}€, Original: ${result.originalPrice}€, Descuento: ${result.discount}%`);

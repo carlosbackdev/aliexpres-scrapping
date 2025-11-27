@@ -28,7 +28,7 @@ async function enhanceProductWithAI(product) {
 
 1. PARAFRASEAR el título del producto para hacerlo más atractivo y claro, manteniendo las palabras clave importantes pero haciéndolo más corto y quitando las innecesarias. El título debe ser natural en español y optimizado para búsquedas.
 
-2. GENERAR una descripción breve (2-4 líneas máximo) optimizada para SEO que describa el producto de forma natural. Por ejemplo: "Tensor de cadena de distribución para moto, fabricado en hierro resistente, ideal para mantener la tensión correcta de la cadena y prolongar su vida útil."
+2. GENERAR una descripción breve (4-6 líneas máximo) optimizada para SEO que describa el producto de forma natural. Por ejemplo: "Tensor de cadena de distribución para moto, fabricado en hierro resistente, ideal para mantener la tensión correcta de la cadena y prolongar su vida útil."
 
 3. GENERAR una lista de palabras clave (keywords) relevantes para SEO, separadas por comas. Máximo 10 palabras clave.
 

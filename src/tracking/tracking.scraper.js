@@ -134,12 +134,12 @@ async function scrapeTrackingInfo(trackingNumber) {
     await page.waitForTimeout(3000); // Esperar adicional
     
     // Debug: guardar screenshot
-    const fs = require('fs');
-    const debugPath = require('path');
-    const debugDir = debugPath.join(__dirname, '../../debug');
-    if (!fs.existsSync(debugDir)) fs.mkdirSync(debugDir, { recursive: true });
-    await page.screenshot({ path: debugPath.join(debugDir, `tracking_${trackingNumber}.png`), fullPage: true });
-    console.log(`📸 Screenshot guardado en debug/tracking_${trackingNumber}.png`);
+    // const fs = require('fs');
+    // const debugPath = require('path');
+    // const debugDir = debugPath.join(__dirname, '../../debug');
+    // if (!fs.existsSync(debugDir)) fs.mkdirSync(debugDir, { recursive: true });
+   //  await page.screenshot({ path: debugPath.join(debugDir, `tracking_${trackingNumber}.png`), fullPage: true });
+    // console.log(`📸 Screenshot guardado en debug/tracking_${trackingNumber}.png`);
     
     // Extraer información principal del estado
     const statusInfo = await page.evaluate(() => {
