@@ -18,6 +18,7 @@ const { scrapeTrackingInfo } = require('./tracking/tracking.scraper');
 const { trackingRequestSchema, trackingResponseSchema } = require('./tracking/tracking.schema');
 const { z } = require('zod');
 const multer = require('multer');
+const UPLOADS_ROOT = process.env.UPLOADS_DIR || path.join(__dirname, '../uploads');
 
 // Configurar multer para subida de archivos en memoria
 const upload = multer({ 
@@ -33,7 +34,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 // Servir imágenes estáticas desde el volumen
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static(UPLOADS_ROOT));
 app.use('/images', express.static(path.join(__dirname, '../images')));
 
 app.get('/', (req, res) => {
@@ -223,7 +224,10 @@ app.post('/api/products-images/delete', async (req, res) => {
 
     for (const prod of products) {
       if (typeof prod.imageUrl === 'string' && prod.imageUrl.startsWith('/uploads/products/')) {
-        const imagePath = path.join(__dirname, '..', prod.imageUrl);
+        // Nos quedamos solo con el nombre de archivo
+        const filename = prod.imageUrl.replace('/uploads/products/', '');
+        // Ruta física REAL dentro del contenedor/volumen
+        const imagePath = path.join(UPLOADS_ROOT, 'products', filename);
 
         try {
           await fs.unlink(imagePath);

@@ -24,6 +24,7 @@ async function scrapeAliExpressProduct(url) {
     // Lanzar navegador con stealth mode
     browser = await chromium.launch({ 
       headless: true,
+      //browser: 'chromium',
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',

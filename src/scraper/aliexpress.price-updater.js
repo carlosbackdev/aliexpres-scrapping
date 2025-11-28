@@ -15,6 +15,7 @@ async function scrapePriceUpdate(url) {
     
     browser = await chromium.launch({ 
       headless: true,
+    //  browser: 'chromium',
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -46,20 +47,13 @@ async function scrapePriceUpdate(url) {
     
 
    // Inyectar código para ocultar webdriver
-    await page.addInitScript(() => {
-      Object.defineProperty(navigator, 'webdriver', {
-        get: () => false,
-      });
-      
-      // Sobrescribir plugins y mimeTypes
-      Object.defineProperty(navigator, 'plugins', {
-        get: () => [1, 2, 3, 4, 5],
-      });
-      
-      Object.defineProperty(navigator, 'languages', {
-        get: () => ['es-ES', 'es', 'en'],
-      });
+   await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'webdriver', { get: () => false });
+      Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+      Object.defineProperty(navigator, 'languages', { get: () => ['es-ES', 'es', 'en'] });
     });
+
+   // await waitIfCaptcha(page, 30000, 10 * 60 * 1000);
     
     // Navegar como lo haría un humano
     console.log('🌐 Navegando a la página con comportamiento humano...');
@@ -101,6 +95,48 @@ async function scrapePriceUpdate(url) {
     }
   }
 }
+
+async function waitIfCaptcha(page, checkIntervalMs = 30000, maxWaitMs = 10 * 60 * 1000) {
+  console.log("🧩 Comprobando si hay CAPTCHA...");
+
+  const captchaSelectors = [
+    'text="Verification"',
+    'text="Verificación"',
+    'iframe[src*="captcha"]',
+    '[data-spm-anchor-id*="captcha"]',
+    'text="Are you human?"'
+  ];
+
+  const start = Date.now();
+
+  while (Date.now() - start < maxWaitMs) {
+    for (const sel of captchaSelectors) {
+      const found = await page.$(sel);
+
+      if (found) {
+        console.log("⚠️ CAPTCHA detectado. Resuélvelo manualmente...");
+        console.log(`⏳ Revisión nuevamente en ${checkIntervalMs / 1000}s...`);
+        
+        // Movimiento humano para reducir bloqueo
+        await page.mouse.move(
+          Math.random() * 400 + 200,
+          Math.random() * 200 + 300
+        );
+        
+        await page.waitForTimeout(checkIntervalMs);
+        continue;
+      }
+    }
+
+    // Si ninguno de los selectores existe → captcha ha desaparecido
+    console.log("🟢 CAPTCHA resuelto → continuamos automáticamente!");
+    return;
+  }
+
+  console.warn("⏱ Tiempo de espera agotado, intento continuar igualmente...");
+}
+
+
 
 /**
  * Actualiza precios de múltiples productos en batch
