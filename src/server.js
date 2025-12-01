@@ -23,14 +23,14 @@ const UPLOADS_ROOT = process.env.UPLOADS_DIR || path.join(__dirname, '../uploads
 // Configurar multer para subida de archivos en memoria
 const upload = multer({ 
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB máximo
+  limits: { fileSize: 50 * 1024 * 1024 } // 50MB máximo
 });
 
 const app = express();
 
 // ⚠️ IMPORTANTE: Middleware de parsing ANTES de las rutas
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
 
 // Servir imágenes estáticas desde el volumen
