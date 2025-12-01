@@ -37,6 +37,10 @@ app.use(cors());
 app.use('/uploads', express.static(UPLOADS_ROOT));
 app.use('/images', express.static(path.join(__dirname, '../images')));
 
+// Rutas de upload
+const uploadRoutes = require('./banner/upload.routes');
+app.use('/api/upload', uploadRoutes);
+
 app.get('/', (req, res) => {
   res.json({
     service: 'AliExpress Scraper Microservice',
@@ -46,7 +50,10 @@ app.get('/', (req, res) => {
       updatePrices: 'POST /update-prices - Actualización masiva de precios',
       enhanceTitle: 'POST /enhance-title - Mejorar título y generar keywords con IA',
       createBanner: 'POST /banner/create - Crear y subir banner al servicio externo',
-      tracking: 'POST /tracking - Obtener información de seguimiento de paquete'
+      tracking: 'POST /tracking - Obtener información de seguimiento de paquete',
+      uploadImage: 'POST /api/upload/image - Subir imagen desde el frontend',
+      deleteProductsImages: 'POST /api/products-images/delete - Eliminar múltiples imágenes de productos',
+      deleteBannerImage: 'POST /api/banner-images/delete - Eliminar una imagen individual por URL'
     }
   });
 });
@@ -228,7 +235,8 @@ app.post('/api/products-images/delete', async (req, res) => {
         const filename = prod.imageUrl.replace('/uploads/products/', '');
         // Ruta física REAL dentro del contenedor/volumen
         const imagePath = path.join(UPLOADS_ROOT, 'products', filename);
-
+        console.log(`🗑️ Eliminando imagen: ${imagePath}`);
+        console.log(`🗑️ Producto imagen: ${prod.imageUrl}`);
         try {
           await fs.unlink(imagePath);
           deleted.push(prod.id);
@@ -247,6 +255,73 @@ app.post('/api/products-images/delete', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Error al eliminar imágenes',
+      message: error.message
+    });
+  }
+});
+
+// ========== ENDPOINT: ELIMINAR UNA IMAGEN POR URL ==========
+app.post('/api/banner-images/delete', async (req, res) => {
+  try {
+    // Extraer imageUrl del objeto HomeBanner recibido
+    const { imageUrl } = req.body;
+
+    // Validar que imageUrl exista
+    if (!imageUrl) {
+      return res.status(400).json({
+        success: false,
+        error: 'El campo imageUrl es requerido'
+      });
+    }
+
+    // Validar que sea un string y que empiece con /uploads/products/
+    if (typeof imageUrl !== 'string' || !imageUrl.startsWith('/uploads/products/')) {
+      return res.status(400).json({
+        success: false,
+        error: 'URL de imagen inválida. Debe ser una cadena que comience con /uploads/products/'
+      });
+    }
+
+    // Extraer solo el nombre del archivo
+    const filename = imageUrl.replace('/uploads/products/', '');
+    
+    // Ruta física REAL dentro del contenedor/volumen
+    const imagePath = path.join(UPLOADS_ROOT, 'products', filename);
+    
+    console.log(`🗑️ Eliminando imagen: ${imagePath}`);
+    console.log(`🗑️ URL recibida: ${imageUrl}`);
+
+    try {
+      // Verificar si el archivo existe antes de intentar eliminarlo
+      await fs.access(imagePath);
+      
+      // Eliminar el archivo
+      await fs.unlink(imagePath);
+      
+      console.log(`✅ Imagen eliminada exitosamente: ${filename}`);
+      
+      return res.json({
+        success: true,
+        message: 'Imagen eliminada correctamente',
+        deletedImage: imageUrl
+      });
+      
+    } catch (err) {
+      console.error(`❌ No se pudo eliminar ${imagePath}:`, err.message);
+      
+      return res.status(404).json({
+        success: false,
+        error: 'Imagen no encontrada o no se pudo eliminar',
+        message: err.message,
+        imageUrl: imageUrl
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Error en /api/banner-images/delete:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al eliminar imagen',
       message: error.message
     });
   }
