@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { randomUUID } = require('crypto');
 const { uploadImage } = require('./upload.controller');
 
 const router = express.Router();
@@ -19,9 +20,13 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
-    // Mantener el nombre original del archivo
-    const originalName = file.originalname;
-    cb(null, originalName);
+    const extension = {
+      'image/jpeg': '.jpg',
+      'image/png': '.png',
+      'image/webp': '.webp',
+      'image/gif': '.gif'
+    }[file.mimetype];
+    cb(null, `${randomUUID()}${extension}`);
   }
 });
 
