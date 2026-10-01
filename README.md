@@ -18,13 +18,13 @@ AliExpress usa contenido dinámico. El scraper espera a que se carguen los eleme
 ### No se extraen todos los datos
 
 AliExpress cambia frecuentemente su estructura HTML. Revisar los selectores en `src/scraper/aliexpress.scraper.js`.
+Captchas paran el flujo.
 
 ## 📝 Notas
 
 - **Limitaciones de AliExpress**: AliExpress puede detectar scraping y bloquear peticiones. Usar con moderación.
 - **Tiempo de respuesta**: El scraping puede tomar 5-15 segundos por producto.
 - **Mantenimiento**: Los selectores HTML pueden cambiar. Actualizar según sea necesario.
-
 ...
 }
 ]
